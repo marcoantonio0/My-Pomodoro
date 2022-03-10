@@ -1,6 +1,6 @@
 # My Pomodoro
 
-Estava utilizando um site Pomodoro para rastrear meu tempo no metodo de foco. Acabei tendo um ideia de criar o meu próprio. Não satisfeito com o html, css e js, resolvi utilizar o Electron para torna-lo uma aplicação Windows.
+Estava utilizando um site Pomodoro para rastrear meu tempo no metodo de foco. Acabei tendo um ideia de criar o meu próprio. Não satisfeito com o html, css e js, resolvi utilizar o Electron para torna-lo uma aplicação Desktop.
 
 # ⬇️ Download
 
