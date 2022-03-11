@@ -1,7 +1,7 @@
 {
   "name": "my-pomodoro",
   "productName": "MyPomodoro",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "description": "My own Pomodoro Clocker to management my own focus times.",
   "main": "src/index.js",
   "scripts": {

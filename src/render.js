@@ -348,29 +348,6 @@ document.onreadystatechange = (event) => {
             startOrResume();
         });
 
-        ipcRenderer.on('checking-for-update', () => {
-            console.log('checkupdate')
-            document.getElementById('update').style.display = 'block';
-            document.getElementById('searchUpdate').style.display = 'block';
-        })
-        
-        ipcRenderer.on('download-progress', (event, text) => {
-            document.getElementById('update').style.display = 'block';
-            document.getElementById('searchUpdate').style.display = 'none';
-            document.getElementById('newUpdate').style.display = 'none';
-            let progressBar = document.getElementById('progressBar');
-            progressBar.style.display = 'block';
-            progressBar.style.width = `${text}%`;
-            document.querySelector('.progress-percent').innerText = `${text}%`;
-        })
-
-        ipcRenderer.on('update-downloaded', (event, text) => {
-            document.getElementById('update').style.display = 'block';
-            document.getElementById('searchUpdate').style.display = 'none';
-            document.getElementById('newUpdate').style.display = 'block';
-            document.getElementById('progressBar').style.display = 'none'
-        })
-        
         ipcRenderer.on('stop', e => {
             stopAll();
         })
@@ -378,8 +355,47 @@ document.onreadystatechange = (event) => {
         ipcRenderer.on('pause', e => {
             pause();
         })
+
+
+        ipcRenderer.on('update-available', () => {
+            console.log('update-available')
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'block';
+        })
+
+        ipcRenderer.on('update-not-available', () => {
+            document.getElementById('update').style.display = 'none';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'none';
+        })
+        
+    
+        ipcRenderer.on('update-downloaded', () => {
+            console.log('update-downloaded')
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'none';
+            document.getElementById('newUpdate2').style.display = 'block';
+            document.getElementById('progressBar').style.display = 'none'
+        })
+
+        ipcRenderer.on('error', () => {
+            console.log('error')
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'none';
+            document.getElementById('newUpdate2').style.display = 'none';
+            document.getElementById('errorUpdate').style.display = 'none'
+        })
+        
+  
     }
 };
+
+function quitAndInstall() {
+    ipcRenderer.invoke('quitAndInstall');
+} 
 
 window.onbeforeunload = (event) => {
     /* If window is reloaded, remove win event listeners

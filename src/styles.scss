@@ -291,39 +291,24 @@ html, body {height: 100%; margin: 0;}
   top: 31px;
   width: 100%;
   text-align: center;
-  &.search {
-    background-color: rgb(199, 199, 199);
-  }
-  &.newUpdate {
-    background-color: #9d66b4;
-  }
  
-  #newUpdate {
+  #newUpdate, #newUpdate2 {
     color: #8e44ad;
     font-weight: 600;
-    cursor: pointer;
+    
   }
+
+  
+#errorUpdate {
+  color: red;
+  font-weight: 600;
 }
 
-#progressBar {
-  background-color: rgb(199, 199, 199);
-  position: relative;
-  display: block;
-  height: 100%;
-  width: 100%;
-  .progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    height: 100%;
-    font-size: 11px;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    width: 0%;
-    background-color: #b078ca;
+
+  #newUpdate2 {
+    cursor: pointer;
   }
+  
 }
 
 .history {

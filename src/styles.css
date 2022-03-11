@@ -380,17 +380,12 @@ html, body {
   text-align: center;
 }
 
-#update.search {
-  background-color: #c7c7c7;
-}
-
-#update.newUpdate {
-  background-color: #9d66b4;
-}
-
-#update #newUpdate {
+#update #newUpdate, #update #newUpdate2 {
   color: #8e44ad;
   font-weight: 600;
+}
+
+#update #newUpdate2 {
   cursor: pointer;
 }
 
@@ -418,7 +413,6 @@ html, body {
       -ms-flex-pack: center;
           justify-content: center;
   color: #fff;
-  width: 0%;
   background-color: #b078ca;
 }
 

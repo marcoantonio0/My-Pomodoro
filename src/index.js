@@ -1,11 +1,16 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu, autoUpdater  } = require('electron');
 const path = require('path');
+const log = require('electron-log');
 
-require('update-electron-app')({
-  repo: 'marcoantonio0/My-Pomodoro',
-  updateInterval: '1 hour',
-  logger: require('electron-log')
-})
+const server = 'https://update.electronjs.org'
+const feed = `${server}/marcoantonio0/My-Pomodoro/${process.platform}/${app.getVersion()}/RELEASES`
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
+autoUpdater.setFeedURL(feed);
+
+
 
 let tray;
 let win;
@@ -46,6 +51,7 @@ Object.defineProperty(app, 'isPackaged', {
 
   // and load the index.html of the app.
   win.loadFile(path.join(__dirname, 'index.html'));
+
 
 
   ipcMain.handle('minimize', (evt, arg) => {
@@ -186,13 +192,44 @@ ipcMain.handle('notification', (e, data) => {
 
 
 
+
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createWindow();
 
+  // autoUpdater.checkForUpdates()
+
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 30000)
+
+  autoUpdater.on('checking-for-update', (e) => {
+    win.webContents.send('checking-for-update');
+  })
+
+  autoUpdater.on('update-available', (e) => {
+    win.webContents.send('update-available');
+  })
+
+  autoUpdater.on('update-not-available', (e) => {
+    win.webContents.send('update-not-available');
+  })
+
+  ipcMain.handle('quitAndInstall', () => {
+    autoUpdater.quitAndInstall();
+  })
   
+  
+  autoUpdater.on('update-downloaded', (info) => {
+    win.webContents.send('update-downloaded');
+  })
+
+  autoUpdater.on('error', e => {
+    win.webContents.send('error');
+  })
 
   win.webContents.on('did-finish-load', () => {
     win.webContents.send('version', app.getVersion())
