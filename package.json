@@ -72,7 +72,7 @@
     "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "@electron-forge/publisher-github": "^6.0.0-beta.63",
     "electron-forge": "^5.2.4",
-    "electron-prebuilt-compile": "^4.0.0",
+    "electron-prebuilt-compile": "4.0.0",
     "electron": "^17.1.2"
   }
 }
