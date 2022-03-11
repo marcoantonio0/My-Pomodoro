@@ -1,8 +1,7 @@
 const { ipcRenderer } = require('electron');
-
 const path = require('path');
-let shortPauses = 0,
-currentType = 'PRODUCTIVE_TIME';
+
+currentType = 'PRODUCTIVE_TIME',
 lastType = null;
 shortPauseTime = 5,
 longPauseTime = 15,
@@ -13,6 +12,10 @@ pauseButton = document.getElementById('pause'),
 stopButton = document.getElementById('stop'),
 currentTime = '0:00',
 state = '',
+timeLeft = 0,
+timePassed = 0,
+currentTimeLimit = 0,
+FULL_DASH_ARRAY = 283,
 version= document.getElementById('version'),
 historyName = 'HS_CLOCK',
 taskName = 'TASK_DATA',
@@ -171,25 +174,27 @@ function startOrResume(){
 }
 
 function start() {
-    let ms;
     countDownTime = new Date();
 
     switch (currentType){
         case 'PRODUCTIVE_TIME':
-            countDownTime.setMinutes(countDownTime.getMinutes()+productiveTime);
+            currentTimeLimit = productiveTime * 60;
             startClock();
+            timePassed = 0;
             lastType = currentType;
             state = 'TIMING';
             break;
         case 'SHORT_PAUSE_TIME':
-            countDownTime.setMinutes(countDownTime.getMinutes()+shortPauseTime);
+            currentTimeLimit = shortPauseTime * 60;
             startClock();
+            timePassed = 0;
             lastType = currentType;
             state = 'TIMING';
             break;
         case 'LONG_PAUSE_TIME':
-            countDownTime.setMinutes(countDownTime.getMinutes()+longPauseTime);
+            currentTimeLimit = longPauseTime * 60;
             startClock();
+            timePassed = 0;
             lastType = currentType;
             state = 'TIMING';
             break;
@@ -202,8 +207,6 @@ function start() {
 }
 
 function resume() {
-    countDownTime = new Date();
-    countDownTime.setMinutes(countDownTime.getMinutes() + parseFloat(currentTime.split(':')[0]), countDownTime.getSeconds() + parseFloat(currentTime.split(':')[1]))
     startOrResumeButton.style.display = 'none';
     startOrResumeButton.innerText = 'Iniciar';
     pauseButton.style.display = 'block';
@@ -278,7 +281,6 @@ function getNextType() {
             for (let i = total; i < total+7; i++) {
                 data.push(historyData[i]);
             }
-            console.log(data.filter(x => x.type == 'SHORT_PAUSE_TIME').length);
             if(data.filter(x => x.type == 'SHORT_PAUSE_TIME').length >= 3){
                 return 'LONG_PAUSE_TIME';  
             } else {
@@ -297,23 +299,35 @@ function getNextType() {
 
 function stopAll() {
     clearInterval(timing);
-    currentTime = '00:00';
+    currentTime = '0:00';
     clock.innerHTML = currentTime;
     startOrResumeButton.innerText = 'Iniciar';
     startOrResumeButton.style.display = 'block';
     pauseButton.style.display = 'none';
     stopButton.style.display = 'none';
     state = 'FINISHED';
+    currentTimeLimit = 0;
+    timePassed = 0;
+    timeLeft = 0;
     document.title = currentTitle;
     ipcRenderer.invoke('stateChange', state);
 }
 
 async function updateClockToTime(){
-    var now = new Date().getTime();
-    var timeleft = countDownTime - now;
-        
-    var minutes = Math.floor((timeleft % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((timeleft % (1000 * 60)) / 1000);
+    timePassed = timePassed += 1;
+    timeLeft = currentTimeLimit - timePassed;
+    
+    setCircleDasharray();
+
+    // let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    // let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+
+    if(minutes == 5 && seconds == 0){
+        showNotification('Restam 5min para concluir o relógio.');
+    }
 
     if(minutes <= 0 && seconds <= 3) {
         if(!playing){
@@ -322,12 +336,18 @@ async function updateClockToTime(){
             await audio.play();
         }
     }
+
+    if (seconds < 10) {
+        seconds = `0${seconds}`;
+    }
   
     currentTime = `${minutes}:${seconds}`;
     clock.innerHTML = currentTime;
+
+   
     document.title = `${currentTime} | ${currentTitle}`;
 
-    if (timeleft < 0) {
+    if (timeLeft < 0) {
         clearInterval(timing);
         currentTime = '0:00';
         clock.innerHTML = currentTime;
@@ -358,7 +378,6 @@ document.onreadystatechange = (event) => {
 
 
         ipcRenderer.on('update-available', () => {
-            console.log('update-available')
             document.getElementById('update').style.display = 'block';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'block';
@@ -372,7 +391,6 @@ document.onreadystatechange = (event) => {
         
     
         ipcRenderer.on('update-downloaded', () => {
-            console.log('update-downloaded')
             document.getElementById('update').style.display = 'block';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'none';
@@ -381,7 +399,6 @@ document.onreadystatechange = (event) => {
         })
 
         ipcRenderer.on('error', () => {
-            console.log('error')
             document.getElementById('update').style.display = 'block';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'none';
@@ -442,4 +459,28 @@ function handleWindowControls() {
             document.body.classList.remove('maximized');
         }
     }
+}
+
+
+
+
+// Credit: Mateusz Rybczonec
+
+
+
+
+
+
+function calculateTimeFraction() {
+  const rawTimeFraction = timeLeft / currentTimeLimit;
+  return rawTimeFraction - (1 / currentTimeLimit) * (1 - rawTimeFraction);
+}
+
+function setCircleDasharray() {
+  const circleDasharray = `${(
+    calculateTimeFraction() * FULL_DASH_ARRAY
+  ).toFixed(0)} 283`;
+  document
+    .getElementById("base-timer-path-remaining")
+    .setAttribute("stroke-dasharray", circleDasharray);
 }

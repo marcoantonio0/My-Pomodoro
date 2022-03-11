@@ -1,24 +1,19 @@
 .parent {
   display: -ms-grid;
   display: grid;
-  -ms-grid-columns: 2fr 1fr;
-      grid-template-columns: 2fr 1fr;
+  -ms-grid-columns: 1fr 2fr;
+      grid-template-columns: 1fr 2fr;
   -ms-grid-rows: 1fr;
       grid-template-rows: 1fr;
-  grid-column-gap: 20px;
+  grid-column-gap: 0px;
   grid-row-gap: 0px;
   width: 100%;
-  background-color: #fff;
-  -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.034);
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.034);
-  padding: 1rem;
   height: 100%;
 }
 
 .container {
   height: 100%;
   margin: 0 auto;
-  padding-top: 32px;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -32,6 +27,11 @@
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
+}
+
+main {
+  padding-top: 32px;
+  height: 100%;
 }
 
 body {
@@ -70,6 +70,7 @@ html, body {
   height: 32px;
   width: 100%;
   background: #9b59b6;
+  z-index: 9999;
 }
 
 .maximized #titlebar {
@@ -265,7 +266,7 @@ html, body {
 }
 
 .list-tasks .task .task-text {
-  white-space: pre;
+  white-space: pre-line;
 }
 
 .list-tasks .task .time {
@@ -315,8 +316,8 @@ html, body {
 .list-tasks .task.checked:after {
   content: url("./assets/img/checked.svg");
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 14px;
+  left: 15px;
 }
 
 .list-tasks .task.checked:before {
@@ -370,62 +371,44 @@ html, body {
 }
 
 #update {
-  font-size: 13px;
-  color: #666;
+  font-size: 11px;
+  color: #fff;
+  background-color: #8e44ad;
   display: block;
-  height: 15px;
-  position: absolute;
-  top: 31px;
+  height: 25px;
   width: 100%;
   text-align: center;
-}
-
-#update #newUpdate, #update #newUpdate2 {
-  color: #8e44ad;
-  font-weight: 600;
-}
-
-#update #newUpdate2 {
-  cursor: pointer;
-}
-
-#progressBar {
-  background-color: #c7c7c7;
-  position: relative;
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
-#progressBar .progress {
-  position: absolute;
-  top: 0;
-  left: 0;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  height: 100%;
-  font-size: 11px;
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
-  color: #fff;
-  background-color: #b078ca;
 }
 
-.history {
-  overflow-y: auto;
+#update #errorUpdate {
+  color: red;
+}
+
+#update #newUpdate2 {
+  cursor: pointer;
+}
+
+#history {
   overflow-x: hidden;
-  height: calc(100% - 330px);
-  width: 100%;
-  top: 330px;
+  overflow-y: auto;
+  height: calc(100% - 51px);
   position: absolute;
+  width: 100%;
+  top: 50px;
+  bottom: 0px;
+  padding: 0 15px;
 }
 
-.history .history-item {
+#history .history-item {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -437,20 +420,113 @@ html, body {
   padding: 10px 0;
 }
 
-.history .history-item .time {
+#history .history-item .time {
   font-size: 13px;
   line-height: 1.2;
   color: #333;
 }
 
-.history .history-item .type {
+#history .history-item .type {
   color: #666;
   font-size: 16px;
   font-weight: 600;
 }
 
-.history .history-item:last-child {
+#history .history-item:last-child {
   border-bottom: none;
+}
+
+.base-timer {
+  height: 300px;
+  width: 300px;
+  position: relative;
+}
+
+.base-timer__svg {
+  -webkit-transform: scaleX(-1);
+          transform: scaleX(-1);
+}
+
+.base-timer__circle {
+  fill: none;
+  stroke: none;
+}
+
+.base-timer__path-elapsed {
+  stroke-width: 3px;
+  stroke: #d9d9d9;
+}
+
+.base-timer__path-remaining {
+  stroke-width: 3px;
+  stroke-linecap: round;
+  -webkit-transform: rotate(90deg);
+          transform: rotate(90deg);
+  -webkit-transform-origin: center;
+          transform-origin: center;
+  -webkit-transition: 1s linear all;
+  transition: 1s linear all;
+  fill-rule: nonzero;
+  stroke: #8e44ad;
+}
+
+.wrapper {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  height: 100%;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -ms-flex-wrap: nowrap;
+      flex-wrap: nowrap;
+}
+
+.wrapper .column1 {
+  min-height: calc(100vh - 350px);
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+
+.wrapper .column2 {
+  height: 100%;
+  position: relative;
+}
+
+.wrapper .column2 h2 {
+  padding: 1rem;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+#clock {
+  font-size: 3rem;
+  color: #666;
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  top: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  font-size: 48px;
 }
 
 .clocker {
@@ -467,14 +543,6 @@ html, body {
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
-  margin-bottom: 1rem;
-  background-color: #eee;
-  border-radius: 5px;
-}
-
-.clocker h2 {
-  font-size: 3rem;
-  color: #666;
   margin-bottom: 1rem;
 }
 
@@ -589,20 +657,21 @@ html, body {
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
+  margin-top: 1rem;
 }
 
 html, body {
   margin: 0;
   height: 100%;
-  background-color: #eee;
+  background-color: #f6f6f6;
 }
 
 .div1 {
   -ms-grid-row: 1;
   -ms-grid-row-span: 1;
-  -ms-grid-column: 1;
+  -ms-grid-column: 2;
   -ms-grid-column-span: 1;
-  grid-area: 1 / 1 / 2 / 2;
+  grid-area: 1 / 2 / 2 / 3;
   width: 100%;
   position: relative;
 }
@@ -611,12 +680,12 @@ html, body {
   position: relative;
   -ms-grid-row: 1;
   -ms-grid-row-span: 1;
-  -ms-grid-column: 2;
+  -ms-grid-column: 1;
   -ms-grid-column-span: 1;
-  grid-area: 1 / 2 / 2 / 3;
+  grid-area: 1 / 1 / 2 / 2;
   width: 100%;
   border: 1px solid #eee;
-  border-radius: 5px;
+  background-color: #fff;
 }
 
 .div2 h2 {

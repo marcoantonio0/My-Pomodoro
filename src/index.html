@@ -35,42 +35,68 @@
         </div>
       </div>
     </header>
-    <div id="update">
-      <span id="searchUpdate" style="display: none;">Buscando por atualizações...</span>
-      <span id="newUpdate" style="display: none;">Nova atualização!</span>
-      <span id="newUpdate2" style="display: none;" onclick="quitAndInstall()">Nova atualização! Clique aqui para aplica-la.</span>
-      <div id="errorUpdate" style="display: none;">Houve um erro ao instalar atualização!</div>
-    </div>
-    <div class="container">
-        <div class="parent">
-            <div class="div1">
-                <div class="clocker">
-                    <div style="padding-top: 10px;" id="types">
-                        <span id="PRODUCTIVE_TIME" style="display: none;">Focar</span>
-                        <span id="LONG_PAUSE_TIME" style="display: none;">Pausa Longa</span>
-                        <span id="SHORT_PAUSE_TIME"  style="display: none;">Pausa Curta</span>
+    <main>
+      <div id="update" style="display: none;">
+        <span id="searchUpdate" style="display: none;">Buscando por atualizações...</span>
+        <span id="newUpdate" style="display: none;">Nova atualização!</span>
+        <span id="newUpdate2" style="display: none;" onclick="quitAndInstall()">Nova atualização! Clique aqui para aplica-la.</span>
+        <div id="errorUpdate" style="display: none;">Houve um erro ao instalar atualização!</div>
+      </div>
+      <div class="container">
+          <div class="parent">
+              <div class="div1">
+                  <div class="wrapper">
+                    <div class="column1">
+                      <div class="clocker">
+                        <div style="padding-top: 10px;" id="types">
+                            <span id="PRODUCTIVE_TIME" style="display: none;">Focar</span>
+                            <span id="LONG_PAUSE_TIME" style="display: none;">Pausa Longa</span>
+                            <span id="SHORT_PAUSE_TIME"  style="display: none;">Pausa Curta</span>
+                        </div>
+                        <div class="base-timer">
+                          <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <g class="base-timer__circle">
+                              <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
+                              <path
+                                id="base-timer-path-remaining"
+                                stroke-dasharray="283"
+                                class="base-timer__path-remaining "
+                                d="
+                                  M 50, 50
+                                  m -45, 0
+                                  a 45,45 0 1,0 90,0
+                                  a 45,45 0 1,0 -90,0
+                                "
+                              ></path>
+                            </g>
+                          </svg>
+                          <h2 id="clock">0:00</h2>
+                        </div>
+                        <div class="actions">
+                          <button class="btn btn-1 purple" onclick="startOrResume()" id="startOrResume">Iniciar</button>
+                          <button class="btn btn-2 primary" onclick="pause()" id="pause" style="display: none;">Pausar</button>
+                          <button class="btn btn-2 red" style="display: none;" id="stop" onclick="stopAll()">Parar</button>
+                      </div>
                     </div>
-                    <h2 id="clock">0:00</h2>
-                </div>
-                <div class="actions">
-                    <button class="btn btn-1 purple" onclick="startOrResume()" id="startOrResume">Iniciar</button>
-                    <button class="btn btn-2 primary" onclick="pause()" id="pause" style="display: none;">Pausar</button>
-                </div>
-                <button class="btn btn-2 red stop" style="display: none;" id="stop" onclick="stopAll()">Parar</button>
-                <div class="history" >
-                    <h2>Histórico</h2>
-                    <div id="history"></div>
-                </div>
-            </div>
-            <div class="div2">
-                <h2>Tasks</h2>
-                <div class="form-control">
-                    <textarea type="text" placeholder="Digite sobre a task" id="text"></textarea>
-                    <button class="btn-send" onclick="sendTask()" >Enviar</button>
-                </div>
-                <div class="list-tasks" id="tasks"></div>
-            </div>
-        </div>
-    </div>
+                    </div>
+                    <div class="column2">
+                      <div class="history" >
+                        <h2>Histórico</h2>
+                        <div id="history"></div>
+                    </div>
+                    </div>
+                  </div>
+              </div>
+              <div class="div2">
+                  <h2>Tasks</h2>
+                  <div class="form-control">
+                      <textarea type="text" placeholder="Digite sobre a task" id="text"></textarea>
+                      <button class="btn-send" onclick="sendTask()" >Enviar</button>
+                  </div>
+                  <div class="list-tasks" id="tasks"></div>
+              </div>
+          </div>
+      </div>
+    </main>
 </body>
 </html>

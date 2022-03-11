@@ -1,7 +1,7 @@
 {
   "name": "my-pomodoro",
   "productName": "MyPomodoro",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "My own Pomodoro Clocker to management my own focus times.",
   "main": "src/index.js",
   "scripts": {
@@ -63,6 +63,7 @@
     }
   },
   "dependencies": {
+    "electron-is-dev": "^2.0.0",
     "electron-log": "^4.4.6",
     "electron-squirrel-startup": "^1.0.0",
     "update-electron-app": "^2.0.1"

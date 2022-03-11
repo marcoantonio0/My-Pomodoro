@@ -1,33 +1,46 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu, autoUpdater  } = require('electron');
 const path = require('path');
 const log = require('electron-log');
+const isDev = require('electron-is-dev');
 
 const server = 'https://update.electronjs.org'
 const feed = `${server}/marcoantonio0/My-Pomodoro/${process.platform}/${app.getVersion()}/RELEASES`
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
+
 log.info('App starting...');
 autoUpdater.setFeedURL(feed);
 
 
-
 let tray;
 let win;
-
-Object.defineProperty(app, 'isPackaged', {
-  get() {
-    return true;
-  }
-});
 
   // Handle creating/removing shortcuts on Windows when installing/uninstalling.
   if (require('electron-squirrel-startup')) {
     // eslint-disable-line global-require
     app.quit();
   }
-  const dispatch = (data) => {
-    win.webContents.send('message', data)
+
+  const gotTheLock = app.requestSingleInstanceLock()
+    
+  if (!gotTheLock) {
+    app.quit()
+  } else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+      if (win) {
+        win.show();
+      }
+    })
+      
+    app.on('ready', () => {
+      createWindow();
+    
+      win.webContents.on('did-finish-load', () => {
+        win.webContents.send('version', app.getVersion())
+      })
+    
+    });
   }
 
 
@@ -37,6 +50,7 @@ Object.defineProperty(app, 'isPackaged', {
     width: 1200,
     height: 800,
     frame: false,
+    visualEffectState: "active",
     fullscreenable: true,
     resizable: true,
     minimizable: true,
@@ -53,11 +67,14 @@ Object.defineProperty(app, 'isPackaged', {
   win.loadFile(path.join(__dirname, 'index.html'));
 
   win.once('ready-to-show', () => {
-    autoUpdater.checkForUpdates();
-  
-    setInterval(() => {
+    
+    if(!isDev){
       autoUpdater.checkForUpdates();
-    }, 10 * 60 * 1000)
+  
+      setInterval(() => {
+        autoUpdater.checkForUpdates();
+      }, 10 * 60 * 1000);
+    }
   
     autoUpdater.on('checking-for-update', (e) => {
       win.webContents.send('checking-for-update');
@@ -205,7 +222,7 @@ Object.defineProperty(app, 'isPackaged', {
     
 
       // Open the DevTools.
-      // win.webContents.openDevTools();
+      if(isDev) win.webContents.openDevTools();
   };
     
     
@@ -223,29 +240,6 @@ ipcMain.handle('notification', (e, data) => {
 
 
 
-
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-  createWindow();
-
-
-
-  win.webContents.on('did-finish-load', () => {
-    win.webContents.send('version', app.getVersion())
-  })
-
-});
-
-
-
-
-
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
