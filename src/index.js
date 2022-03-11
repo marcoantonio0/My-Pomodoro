@@ -44,16 +44,17 @@ Object.defineProperty(app, 'isPackaged', {
   // and load the index.html of the app.
   win.loadFile(path.join(__dirname, 'index.html'));
 
+
   ipcMain.handle('minimize', (evt, arg) => {
     win.minimize();
   })
 
   ipcMain.handle('maxOrUnmax', (evt, arg) => {
     if (BrowserWindow.getFocusedWindow().isMaximized()) {
-      win.webContents.send('maxOrUnmax', 'unmaximize');
+      win.webContents.send('minOrmax', 'unmaximize');
       win.unmaximize();
     } else {
-      win.webContents.send('maxOrUnmax', 'maximize');
+      win.webContents.send('minOrmax', 'maximize');
       win.maximize();
     }
   })
@@ -164,7 +165,7 @@ Object.defineProperty(app, 'isPackaged', {
     
 
       // Open the DevTools.
-      win.webContents.openDevTools();
+      // win.webContents.openDevTools();
   };
     
     

@@ -354,11 +354,21 @@ document.onreadystatechange = (event) => {
             document.getElementById('searchUpdate').style.display = 'block';
         })
         
-        ipcRenderer.on('update-available', () => {
-            console.log('update-available')
+        ipcRenderer.on('download-progress', (event, text) => {
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'none';
+            let progressBar = document.getElementById('progressBar');
+            progressBar.style.display = 'block';
+            progressBar.style.width = `${text}%`;
+            document.querySelector('.progress-percent').innerText = `${text}%`;
+        })
+
+        ipcRenderer.on('update-downloaded', (event, text) => {
             document.getElementById('update').style.display = 'block';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'block';
+            document.getElementById('progressBar').style.display = 'none'
         })
         
         ipcRenderer.on('stop', e => {
@@ -407,10 +417,10 @@ function handleWindowControls() {
 
     // Toggle maximise/restore buttons when maximisation/unmaximisation occurs
     // toggleMaxRestoreButtons();
-    ipcRenderer.on('maxOrMin', toggleMaxRestoreButtons);
+    ipcRenderer.on('minOrmax', toggleMaxRestoreButtons);
 
-    function toggleMaxRestoreButtons(e) {
-        if (e == 'maximize') {
+    function toggleMaxRestoreButtons(e, data) {
+        if (data == 'maximize') {
             document.body.classList.add('maximized');
         } else {
             document.body.classList.remove('maximized');
