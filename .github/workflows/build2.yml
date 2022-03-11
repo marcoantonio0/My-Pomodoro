@@ -1,12 +1,8 @@
-name: Release
-on:
-  release:
-    types:
-      - created
+name: Build2
+on: [push, pull_request]
 
 jobs:
-
-  publish_on_mac:
+  build_on_mac:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
@@ -15,21 +11,17 @@ jobs:
         node-version: 14
     - name: install dependencies
       run: npm install
-    - name: publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: npm run publish
+    - name: build
+      run: npm run make
 
-  publish_on_win:
+  build_on_win:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2       
+    - uses: actions/checkout@v2
     - uses: actions/setup-node@master
       with:
         node-version: 14
     - name: install dependencies
       run: npm install
-    - name: publish
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: npm run publish
+    - name: build
+      run: npm run make
