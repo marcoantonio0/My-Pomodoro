@@ -52,7 +52,38 @@ Object.defineProperty(app, 'isPackaged', {
   // and load the index.html of the app.
   win.loadFile(path.join(__dirname, 'index.html'));
 
-
+  win.once('ready-to-show', () => {
+    autoUpdater.checkForUpdates();
+  
+    setInterval(() => {
+      autoUpdater.checkForUpdates();
+    }, 10 * 60 * 1000)
+  
+    autoUpdater.on('checking-for-update', (e) => {
+      win.webContents.send('checking-for-update');
+    })
+  
+    autoUpdater.on('update-available', (e) => {
+      win.webContents.send('update-available');
+    })
+  
+    autoUpdater.on('update-not-available', (e) => {
+      win.webContents.send('update-not-available');
+    })
+  
+    ipcMain.handle('quitAndInstall', () => {
+      autoUpdater.quitAndInstall();
+    })
+    
+    
+    autoUpdater.on('update-downloaded', (info) => {
+      win.webContents.send('update-downloaded');
+    })
+  
+    autoUpdater.on('error', e => {
+      win.webContents.send('error');
+    })
+  })
 
   ipcMain.handle('minimize', (evt, arg) => {
     win.minimize();
@@ -200,42 +231,15 @@ ipcMain.handle('notification', (e, data) => {
 app.on('ready', () => {
   createWindow();
 
-  // autoUpdater.checkForUpdates()
 
-  setInterval(() => {
-    autoUpdater.checkForUpdates();
-  }, 30000)
-
-  autoUpdater.on('checking-for-update', (e) => {
-    win.webContents.send('checking-for-update');
-  })
-
-  autoUpdater.on('update-available', (e) => {
-    win.webContents.send('update-available');
-  })
-
-  autoUpdater.on('update-not-available', (e) => {
-    win.webContents.send('update-not-available');
-  })
-
-  ipcMain.handle('quitAndInstall', () => {
-    autoUpdater.quitAndInstall();
-  })
-  
-  
-  autoUpdater.on('update-downloaded', (info) => {
-    win.webContents.send('update-downloaded');
-  })
-
-  autoUpdater.on('error', e => {
-    win.webContents.send('error');
-  })
 
   win.webContents.on('did-finish-load', () => {
     win.webContents.send('version', app.getVersion())
   })
 
 });
+
+
 
 
 
