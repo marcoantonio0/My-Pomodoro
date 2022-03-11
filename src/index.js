@@ -50,6 +50,9 @@ let win;
     width: 1200,
     height: 800,
     frame: false,
+    backgroundColor: '#fff',
+    hasShadow: true,
+    show: false,
     visualEffectState: "active",
     fullscreenable: true,
     resizable: true,
@@ -100,6 +103,8 @@ let win;
     autoUpdater.on('error', e => {
       win.webContents.send('error');
     })
+
+    win.show();
   })
 
   ipcMain.handle('minimize', (evt, arg) => {
