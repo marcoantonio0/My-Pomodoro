@@ -1,7 +1,7 @@
 {
   "name": "my-pomodoro",
   "productName": "MyPomodoro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -63,10 +63,8 @@
     }
   },
   "dependencies": {
-    "@electron/remote": "^2.0.7",
     "electron-log": "^4.4.6",
     "electron-squirrel-startup": "^1.0.0",
-    "electron-updater": "^4.6.5",
     "update-electron-app": "^2.0.1"
   },
   "devDependencies": {
@@ -76,8 +74,6 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.63",
     "@electron-forge/maker-zip": "^6.0.0-beta.63",
     "@electron-forge/publisher-github": "^6.0.0-beta.63",
-    "electron-forge": "^5.2.4",
-    "electron-prebuilt-compile": "4.0.0",
     "electron": "^17.1.2"
   }
 }
