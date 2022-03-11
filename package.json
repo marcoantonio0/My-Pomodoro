@@ -54,7 +54,12 @@
           "name": "@electron-forge/maker-rpm",
           "config": {}
         }
-      ]
+      ],
+      "github_repository": {
+        "owner": "marcoantonio0",
+        "name": "My-Pomodoro",
+        "draft": false
+      }
     }
   },
   "dependencies": {
