@@ -1,8 +1,11 @@
-const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu  } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu, autoUpdater  } = require('electron');
 const path = require('path');
-const { autoUpdater } = require("electron-updater")
 
-autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
+require('update-electron-app')({
+  repo: 'marcoantonio0/My-Pomodoro',
+  updateInterval: '1 hour',
+  logger: require('electron-log')
+})
 
 let tray;
 let win;
@@ -189,7 +192,7 @@ ipcMain.handle('notification', (e, data) => {
 app.on('ready', () => {
   createWindow();
 
-  autoUpdater.checkForUpdatesAndNotify()
+  
 
   win.webContents.on('did-finish-load', () => {
     win.webContents.send('version', app.getVersion())
@@ -218,34 +221,5 @@ app.on('activate', () => {
   }
 });
 
-autoUpdater.on('checking-for-update', () => {
-  dispatch('checking-for-update')
-})
 
-autoUpdater.on('update-available', (info) => {
-  dispatch('update-available')
-})
-
-autoUpdater.on('update-not-available', (info) => {
-  dispatch('update-not-available')
-})
-
-autoUpdater.on('error', (err) => {
-  dispatch('Error in auto-updater. ' + err)
-})
-
-autoUpdater.on('download-progress', (progressObj) => {
-  let log_message = "Download speed: " + progressObj.bytesPerSecond
-  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
-  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
-  dispatch(log_message)
-
-  win.webContents.send('size', log_message)
-  win.webContents.send('download-progress', progressObj.percent)
-
-})
-
-autoUpdater.on('update-downloaded', (info) => {
-  dispatch('Update downloaded')
-})
 

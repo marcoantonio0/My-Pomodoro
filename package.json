@@ -9,7 +9,6 @@
     "package": "electron-forge package",
     "pack": "electron-builder --dir",
     "make": "electron-forge make",
-    "pu": "electron-builder --p always",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
@@ -21,9 +20,7 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {
-        "executableName": "mypomodoro"
-      },
+      "packagerConfig": {},
       "publishers": [
         {
           "name": "@electron-forge/publisher-github",
@@ -50,7 +47,9 @@
         },
         {
           "name": "@electron-forge/maker-deb",
-          "config": {}
+          "config": {
+            "executableName": "mypomodoro"
+          }
         },
         {
           "name": "@electron-forge/maker-rpm",
@@ -61,6 +60,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.7",
+    "electron-log": "^4.4.6",
     "electron-squirrel-startup": "^1.0.0",
     "electron-updater": "^4.6.5",
     "update-electron-app": "^2.0.1"
