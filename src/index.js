@@ -174,7 +174,7 @@ Object.defineProperty(app, 'isPackaged', {
     
 
       // Open the DevTools.
-      win.webContents.openDevTools();
+      // win.webContents.openDevTools();
   };
     
     
