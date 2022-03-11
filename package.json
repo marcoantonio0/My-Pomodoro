@@ -48,6 +48,7 @@
         {
           "name": "@electron-forge/maker-deb",
           "config": {
+            "name": "my-pomodoro",
             "executableName": "mypomodoro"
           }
         },
