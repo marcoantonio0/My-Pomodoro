@@ -1,15 +1,31 @@
-const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu  } = require('electron');
 const path = require('path');
-let tray;
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  // eslint-disable-line global-require
-  app.quit();
-}
+const { autoUpdater } = require("electron-updater")
 
-const createWindow = () => {
+autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml');
+
+let tray;
+let win;
+
+Object.defineProperty(app, 'isPackaged', {
+  get() {
+    return true;
+  }
+});
+
+  // Handle creating/removing shortcuts on Windows when installing/uninstalling.
+  if (require('electron-squirrel-startup')) {
+    // eslint-disable-line global-require
+    app.quit();
+  }
+  const dispatch = (data) => {
+    win.webContents.send('message', data)
+  }
+
+
+  const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1200,
     height: 800,
     frame: false,
@@ -26,66 +42,63 @@ const createWindow = () => {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  win.loadFile(path.join(__dirname, 'index.html'));
 
   ipcMain.handle('minimize', (evt, arg) => {
-    mainWindow.minimize();
+    win.minimize();
   })
 
   ipcMain.handle('maxOrUnmax', (evt, arg) => {
     if (BrowserWindow.getFocusedWindow().isMaximized()) {
-      ipcMain.emit('maxOrUnmax', 'unmaximize');
-      mainWindow.unmaximize();
+      win.webContents.send('maxOrUnmax', 'unmaximize');
+      win.unmaximize();
     } else {
-      ipcMain.emit('maxOrUnmax', 'maximize');
-      mainWindow.maximize();
+      win.webContents.send('maxOrUnmax', 'maximize');
+      win.maximize();
     }
   })
 
-
-
-  
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets/img/favicon.ico'));
   tray = new Tray(icon.resize({ width: 16, height: 16 }))
- 
-  
+
+
   tray.on('click', e => {
-    mainWindow.show();
+    win.show();
   })
-  
+
 
   const contextMenu = Menu.buildFromTemplate([
     { label: app.name, type: 'normal', enabled: false, icon: icon.resize({ width: 16, height: 16 }) },
     { label: '', type: 'separator', enabled: false },
     { label: 'Iniciar', type: 'normal', 
       click() {
-        mainWindow.webContents.send('start');
+        win.webContents.send('start');
       } 
     },
     { label: 'Resumir', type: 'normal', visible: false,
       click() {
-        mainWindow.webContents.send('start');
+        win.webContents.send('start');
       } 
     },
     { label: 'Pausar', type: 'normal',  visible: false,
     click() {
-      mainWindow.webContents.send('pause');
+      win.webContents.send('pause');
       } 
     },
     { label: 'Parar', type: 'normal', visible: false,  
       click() {
-        mainWindow.webContents.send('stop');
+        win.webContents.send('stop');
       } 
     },
     { label: '', type: 'separator', visible: false },
     { label: 'Minimizar bandeja', type: 'normal', icon: nativeImage.createFromPath(path.join(__dirname, 'assets/icons/min-w-30.png')).resize({ width: 8, height: 8 }),
       click() {
-        mainWindow.hide();
+        win.hide();
       }
     },
     { label: 'Maximizar', type: 'normal', visible: false, icon: nativeImage.createFromPath(path.join(__dirname, 'assets/icons/max-w-30.png')).resize({ width: 8, height: 8 }),
     click() {
-      mainWindow.show();
+      win.show();
     }
     },
     { label: 'Fechar', type: 'normal', icon: nativeImage.createFromPath(path.join(__dirname, 'assets/icons/close-w-30.png')).resize({ width: 8, height: 8 }),
@@ -94,10 +107,10 @@ const createWindow = () => {
       } 
     }
   ])
-  
+
 
   tray.setContextMenu(contextMenu);
-  
+
   ipcMain.handle('stateChange', (e, state) => {
     switch(state){
       case 'TIMING':
@@ -124,10 +137,10 @@ const createWindow = () => {
       
       
       ipcMain.handle('close', () => {
-        mainWindow.hide();
+        win.hide();
       });
 
-      mainWindow.on('hide', e => {
+      win.on('hide', e => {
         tray.displayBalloon({
           title: app.name,
           content: 'Estou aberto em modo bandeija',
@@ -141,37 +154,47 @@ const createWindow = () => {
         contextMenu.items[7].visible = false;
       });
 
-      mainWindow.on('show', e => {
+      win.on('show', e => {
         contextMenu.items[7].visible = true;
         contextMenu.items[8].visible = false;
       });
       
       tray.setTitle(app.name);
       tray.setToolTip(app.name);
-      
+    
+
       // Open the DevTools.
-      // mainWindow.webContents.openDevTools();
-    };
+      win.webContents.openDevTools();
+  };
     
     
     
-    ipcMain.handle('notification', (e, data) => {
-      const notification = new Notification({
-        title: data.title,
-        body: data.body,
-        closeButtonText:'OK',
-        timeoutType: 'default',
-        icon: path.join(__dirname, 'assets/img/favicon.ico')
-      });
-      notification.show();
-    });
+ipcMain.handle('notification', (e, data) => {
+  const notification = new Notification({
+    title: data.title,
+    body: data.body,
+    closeButtonText:'OK',
+    timeoutType: 'default',
+    icon: path.join(__dirname, 'assets/img/favicon.ico')
+  });
+  notification.show();
+});
 
 
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+
+  autoUpdater.checkForUpdatesAndNotify()
+
+  win.webContents.on('did-finish-load', () => {
+    win.webContents.send('version', app.getVersion())
+  })
+
+});
 
 
 
@@ -194,7 +217,34 @@ app.on('activate', () => {
   }
 });
 
+autoUpdater.on('checking-for-update', () => {
+  dispatch('checking-for-update')
+})
 
+autoUpdater.on('update-available', (info) => {
+  dispatch('update-available')
+})
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+autoUpdater.on('update-not-available', (info) => {
+  dispatch('update-not-available')
+})
+
+autoUpdater.on('error', (err) => {
+  dispatch('Error in auto-updater. ' + err)
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  let log_message = "Download speed: " + progressObj.bytesPerSecond
+  log_message = log_message + ' - Downloaded ' + progressObj.percent + '%'
+  log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')'
+  dispatch(log_message)
+
+  win.webContents.send('size', log_message)
+  win.webContents.send('download-progress', progressObj.percent)
+
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  dispatch('Update downloaded')
+})
+

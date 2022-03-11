@@ -1,4 +1,5 @@
-const { ipcRenderer, Notification } = require('electron');
+const { ipcRenderer } = require('electron');
+
 const path = require('path');
 let shortPauses = 0,
 currentType = 'PRODUCTIVE_TIME';
@@ -12,6 +13,7 @@ pauseButton = document.getElementById('pause'),
 stopButton = document.getElementById('stop'),
 currentTime = '0:00',
 state = '',
+version= document.getElementById('version'),
 historyName = 'HS_CLOCK',
 taskName = 'TASK_DATA',
 historyData = localStorage.getItem(historyName) != null ? JSON.parse(localStorage.getItem(historyName)) : [],
@@ -343,17 +345,27 @@ document.onreadystatechange = (event) => {
         handleWindowControls();
 
         ipcRenderer.on('start', e => {
-            console.log(e)
             startOrResume();
         });
+
+        ipcRenderer.on('checking-for-update', () => {
+            console.log('checkupdate')
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'block';
+        })
+        
+        ipcRenderer.on('update-available', () => {
+            console.log('update-available')
+            document.getElementById('update').style.display = 'block';
+            document.getElementById('searchUpdate').style.display = 'none';
+            document.getElementById('newUpdate').style.display = 'block';
+        })
         
         ipcRenderer.on('stop', e => {
-            console.log(e)
             stopAll();
         })
         
         ipcRenderer.on('pause', e => {
-            console.log(e)
             pause();
         })
     }
@@ -384,6 +396,10 @@ function handleWindowControls() {
         
     });
 
+    ipcRenderer.on('version', (event, text) => {
+        version.innerText = text
+     })
+
     document.getElementById('close-button').addEventListener("click", event => {
         // win.close();
         ipcRenderer.invoke('close');
@@ -394,7 +410,6 @@ function handleWindowControls() {
     ipcRenderer.on('maxOrMin', toggleMaxRestoreButtons);
 
     function toggleMaxRestoreButtons(e) {
-        console.log(e);
         if (e == 'maximize') {
             document.body.classList.add('maximized');
         } else {

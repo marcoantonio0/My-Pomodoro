@@ -373,6 +373,59 @@ html, body {
   background-color: #9b59b6;
 }
 
+#update {
+  font-size: 13px;
+  color: #666;
+  display: block;
+  height: 15px;
+  position: absolute;
+  top: 31px;
+  width: 100%;
+  text-align: center;
+}
+
+#update.search {
+  background-color: #c7c7c7;
+}
+
+#update.newUpdate {
+  background-color: #9d66b4;
+}
+
+#update #newUpdate {
+  color: #8e44ad;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#progressBar {
+  background-color: #c7c7c7;
+  position: relative;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+#progressBar .progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  height: 100%;
+  font-size: 11px;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  color: #fff;
+  width: 0%;
+  background-color: #b078ca;
+}
+
 .history {
   overflow-y: auto;
   overflow-x: hidden;
