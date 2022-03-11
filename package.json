@@ -21,7 +21,9 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "executableName": "mypomodoro"
+      },
       "publishers": [
         {
           "name": "@electron-forge/publisher-github",
@@ -37,7 +39,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "my_app"
+            "name": "my-pomodoro"
           }
         },
         {
