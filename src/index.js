@@ -1,7 +1,10 @@
-const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu, autoUpdater  } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, Tray, nativeImage, Menu, autoUpdater, webContents  } = require('electron');
 const path = require('path');
 const log = require('electron-log');
 const isDev = require('electron-is-dev');
+
+
+require('@electron/remote/main').initialize();
 
 const server = 'https://update.electronjs.org'
 const feed = `${server}/marcoantonio0/My-Pomodoro/${process.platform}/${app.getVersion()}/RELEASES`
@@ -49,11 +52,12 @@ let win;
   win = new BrowserWindow({
     width: 1200,
     height: 800,
-    frame: false,
+    frame: true,
+    titleBarStyle: 'hidden',
     backgroundColor: '#fff',
     hasShadow: true,
+    transparent: true,
     show: false,
-    visualEffectState: "active",
     fullscreenable: true,
     resizable: true,
     minimizable: true,
@@ -65,6 +69,9 @@ let win;
       preload: path.join(__dirname, 'preload.js')
     }
   });
+
+  
+  require('@electron/remote/main').enable(win.webContents);
 
   // and load the index.html of the app.
   win.loadFile(path.join(__dirname, 'index.html'));
@@ -78,10 +85,6 @@ let win;
         autoUpdater.checkForUpdates();
       }, 10 * 60 * 1000);
     }
-  
-    autoUpdater.on('checking-for-update', (e) => {
-      win.webContents.send('checking-for-update');
-    })
   
     autoUpdater.on('update-available', (e) => {
       win.webContents.send('update-available');
@@ -104,7 +107,10 @@ let win;
       win.webContents.send('error');
     })
 
+    
     win.show();
+  
+   
   })
 
   ipcMain.handle('minimize', (evt, arg) => {

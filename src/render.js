@@ -1,11 +1,17 @@
 const { ipcRenderer } = require('electron');
 const path = require('path');
+const { getCurrentWindow, app } = require('@electron/remote');
+const Db = require('./storeDb');
+
+const db = new Db(app);
+
+
 
 currentType = 'PRODUCTIVE_TIME',
 lastType = null;
 shortPauseTime = 5,
 longPauseTime = 15,
-productiveTime = 25,
+productiveTime = 0.10,
 clock = document.getElementById('clock'),
 startOrResumeButton = document.getElementById('startOrResume'),
 pauseButton = document.getElementById('pause'),
@@ -20,7 +26,7 @@ version= document.getElementById('version'),
 historyName = 'HS_CLOCK',
 taskName = 'TASK_DATA',
 historyData = localStorage.getItem(historyName) != null ? JSON.parse(localStorage.getItem(historyName)) : [],
-tasksData = localStorage.getItem(taskName) != null ? JSON.parse(localStorage.getItem(taskName)) : [],
+tasksData =  [],
 currentTitle = document.title,
 countDownTime = null,
 notification = false,
@@ -28,11 +34,16 @@ historyDiv = document.getElementById('history'),
 playing = false,
 timing = null;
 
-checkData();
-updateType();
-renderTypes();
-renderData();
-renderTasks();
+db.initiateDb(() => {
+    renderTasks();
+    renderData();
+    updateType();
+    renderTypes();
+});
+
+// checkData();
+
+
 
  function addTask(data = {
      text: '',
@@ -46,88 +57,152 @@ renderTasks();
 
  function checkTask(index) {
     tasksData = getTasks();
-    tasksData[index].checked = !tasksData[index].checked;
-    localStorage.setItem(taskName,JSON.stringify(tasksData));
+    tasksData[index].checked = tasksData[index].checked == 1 ? 0 : 1;
+    db.database.run(`UPDATE tasks SET checked = ${tasksData[index].checked} WHERE rowid = ${tasksData[index].id}`);
+    db.exportDb();
     renderTasks();
  }
 
  function sendTask(){
      let text = document.getElementById('text').value;
+    
      if(text){
         document.getElementById('text').value = '';
+        db.database.run(`INSERT INTO tasks (title,note,est_pomo,checked,total_pomo,created_at) VALUES 
+            ('${text}', '', 0, 0, 0, datetime('now'))`);
         addTask({
-            text,
-            check: false,
+            title: text,
+            note: '',
+            check: 0,
+            total_pomo: 0,
+            est_pomo: 0,
             created_at: new Date().toDateString()
         });
+        db.exportDb();
         renderTasks();
      }
  }
 
- function removeTask(index) {
-    tasksData = getTasks();
+ function removeTask(id) {
+     let index = tasksData.findIndex(x => x.id == id);
     tasksData.splice(index, 1);
-    localStorage.setItem(taskName,JSON.stringify(tasksData));
+    db.database.run(`DELETE FROM tasks WHERE rowid = ${id}`);
+    db.exportDb();
     renderTasks();
  }
 
  function getTasks() {
-    return localStorage.getItem(taskName) != null ? JSON.parse(localStorage.getItem(taskName)) : [];
+    let result  = db.database.exec(`SELECT rowid AS id, title,
+    note,
+    est_pomo,
+    total_pomo, created_at, checked FROM tasks`);
+    return parseArrayObject(result);
+ }
+
+ function parseArrayObject(result) {
+     let array = [];
+     if(result.length > 0){
+        let columns = result[0].columns;
+        let values = result[0].values;
+        if(columns.length && values.length > 0){
+           for (const value of values) {
+               let object = {};
+               for (const [i, v] of value.entries()) {
+                   object[columns[i]] = v;
+               }
+               array.push(object);
+           }
+       }
+     }
+    return array;
  }
 
  function renderTasks(){
     tasksData = getTasks();
     let html = ``;
-    for (const [i, v] of tasksData.entries()) {
-        let time = new Date(v.created_at)
-        html += `\n
-        <div class="task ${v.checked == true ? 'checked' : ''}" onclick="checkTask(${i})">
-            <span class="time">${time.getDate()}/${time.getMonth()+1}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}</span>
-            <span class="task-text">${v.text}</span>
-            <buttton class="btn-remove-task" type="button" onclick="removeTask(${i})"></buttton>
-        </div>
-        `
+    if(tasksData.length > 0){
+        for (const [i, v] of tasksData.entries()) {
+            let time = new Date(v.created_at)
+            html += `\n
+            <div class="task ${v.checked == 1 ? 'checked' : ''}" onclick="checkTask(${i})">
+                <span class="time">${time.getDate()}/${time.getMonth()+1}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}</span>
+                <span class="task-text">${v.title}</span>
+                <buttton class="btn-remove-task" type="button" onclick="removeTask(${v.id})"></buttton>
+            </div>
+            `
+        }
+    } else {
+        html = `
+            <div class="empyt">
+                Não há nenhuma task no momento.</br>
+                Adicione uma task!
+            </div>
+        `;
     }
     document.getElementById('tasks').innerHTML = html;
  }
 
  function getHistory() {
-   return localStorage.getItem(historyName) != null ? JSON.parse(localStorage.getItem(historyName)) : [];
+    let result = db.database.exec(`SELECT rowid, * FROM logs;`)
+    return parseArrayObject(result);
  }
 
- function checkData() {
-    historyData =  getHistory();
-    if(historyData.length > 0){
-        let time = new Date(historyData[historyData.length-1].time_start);
-        let dateNow = new Date();
-        if(time.getDate() != dateNow.getDate() && time.getMonth() != dateNow.getMonth() && time.getFullYear() != dateNow.getFullYear()){
-            localStorage.removeItem(historyName);
-            return;
-        } else return;
-    }
-    return;
- }
+//  function checkData() {
+//     historyData =  getHistory();
+//     if(historyData.length > 0){
+//         let time = new Date(historyData[historyData.length-1].time_start);
+//         let dateNow = new Date();
+//         if(time.getDate() != dateNow.getDate() && time.getMonth() != dateNow.getMonth() && time.getFullYear() != dateNow.getFullYear()){
+//             localStorage.removeItem(historyName);
+//             return;
+//         } else return;
+//     }
+//     return;
+//  }
 
 function renderData() {
     historyData =  getHistory();
+    console.log(historyData);
     let html = ``;
-    for (const data of historyData) {
-        let timeStart = new Date(data.time_start);
-        let timeEnd = new Date(data.time_end);
-        html += `\n
-        <div class="history-item">
-            <span class="time">${timeStart.getDate()+'/'+(timeStart.getMonth()+1)+'/'+timeStart.getFullYear()} - ${timeStart.getHours()}:${timeStart.getMinutes()} à ${timeEnd.getHours()}:${timeEnd.getMinutes()}</span>
-            <span class="type">${data.type}</span>
-        </div>
+    if(historyData.length > 0){
+        for (const data of historyData) {
+            let timeStart = new Date(data.time_start);
+            let timeEnd = new Date(data.time_end);
+            let type = '';
+            if(data.type_current == 'PRODUCTIVE_TIME') {
+                type = 'Tempo focado'
+            } else if(data.type_current == 'SHORT_PAUSE_TIME'){
+                type = 'Pausa curta'
+            } else {
+                type = 'Pausa longa'
+            }
+            html += `\n
+            <div class="history-item">
+                <span class="time">${timeStart.getDate()+'/'+(timeStart.getMonth()+1)+'/'+timeStart.getFullYear()} - ${timeStart.getHours()}:${timeStart.getMinutes()} à ${timeEnd.getHours()}:${timeEnd.getMinutes()}</span>
+                <span class="type">${type}</span>
+            </div>
+            `;
+        }
+    } else {
+        html = `
+            <div class="empyt">
+                Nenhum registro no histórico no momento.</br>
+                Comece a concluir os tempos para aparecer aqui!
+            </div>
         `;
     }
+
     historyDiv.innerHTML = html;
 }
 
 function setHistoryData(data){
-    historyData =  getHistory();
-    historyData.push(data);
-    localStorage.setItem(historyName, JSON.stringify(historyData))
+    db.database.run(`INSERT INTO logs (pomo_day, time_start, time_end, type_current) VALUES (
+        datetime('now'),
+        datetime('${countDownTime.toISOString()}'),
+        datetime('now'),
+        "${data.type}"
+    );`);
+    db.exportDb();
 }
 
 function deleteHistoryData(index){
@@ -149,12 +224,15 @@ function renderTypes() {
     switch(currentType) {
         case 'PRODUCTIVE_TIME':
             document.getElementById('PRODUCTIVE_TIME').style.display = 'block';
+            document.getElementById('clock').innerHTML = '25:00';
             break;
         case 'SHORT_PAUSE_TIME':
             document.getElementById('SHORT_PAUSE_TIME').style.display = 'block';
+            document.getElementById('clock').innerHTML = '5:00';
             break;
         case 'LONG_PAUSE_TIME':
             document.getElementById('LONG_PAUSE_TIME').style.display = 'block';
+            document.getElementById('clock').innerHTML = '15:00';
             break;
     }
 }
@@ -249,8 +327,8 @@ function eventFinish() {
 }
 
 function updateType(notification = false) {
-    
-    lastType = historyData[historyData.length-1]?.type;
+    // historyData = this.getHistory();
+    lastType = historyData[historyData.length-1]?.type_current;
     if(lastType){
         currentType = getNextType();
     } else {
@@ -281,7 +359,7 @@ function getNextType() {
             for (let i = total; i < total+7; i++) {
                 data.push(historyData[i]);
             }
-            if(data.filter(x => x.type == 'SHORT_PAUSE_TIME').length >= 3){
+            if(data.filter(x => x.type_current == 'SHORT_PAUSE_TIME').length >= 3){
                 return 'LONG_PAUSE_TIME';  
             } else {
                 return 'SHORT_PAUSE_TIME';
@@ -376,6 +454,8 @@ document.onreadystatechange = (event) => {
             pause();
         })
 
+        
+    
 
         ipcRenderer.on('update-available', () => {
             document.getElementById('update').style.display = 'block';
@@ -384,7 +464,7 @@ document.onreadystatechange = (event) => {
         })
 
         ipcRenderer.on('update-not-available', () => {
-            document.getElementById('update').style.display = 'none';
+            document.getElementById('update').style.display = 'block';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'none';
         })
@@ -415,9 +495,7 @@ function quitAndInstall() {
 } 
 
 window.onbeforeunload = (event) => {
-    /* If window is reloaded, remove win event listeners
-    (DOM element listeners get auto garbage collected but not
-    Electron win listeners as the win is not dereferenced unless closed) */
+
     ipcRenderer.removeAllListeners();
 }
 
@@ -425,17 +503,19 @@ function handleWindowControls() {
     // Make minimise/maximise/restore/close buttons work when they are clicked
     document.getElementById('min-button').addEventListener("click", event => {
         // ipcRenderer.minimize();
-        ipcRenderer.invoke('minimize');
+        // ipcRenderer.invoke('minimize');
+        getCurrentWindow().minimize();
+        // BrowserWindow.getFocusedWindow().minimize();
     });
-
+    
     document.getElementById('max-button').addEventListener("click", event => {
-       
-        ipcRenderer.invoke('maxOrUnmax');
+        getCurrentWindow().maximize();
+        // ipcRenderer.invoke('maxOrUnmax');
     });
 
     document.getElementById('restore-button').addEventListener("click", event => {
      
-        ipcRenderer.invoke('maxOrUnmax');
+        getCurrentWindow().unmaximize();
         
     });
 
@@ -445,15 +525,14 @@ function handleWindowControls() {
 
     document.getElementById('close-button').addEventListener("click", event => {
         // win.close();
-        ipcRenderer.invoke('close');
+        getCurrentWindow().hide();
     });
 
-    // Toggle maximise/restore buttons when maximisation/unmaximisation occurs
-    // toggleMaxRestoreButtons();
-    ipcRenderer.on('minOrmax', toggleMaxRestoreButtons);
+    getCurrentWindow().on('resize', toggleMaxRestoreButtons)
+    
 
     function toggleMaxRestoreButtons(e, data) {
-        if (data == 'maximize') {
+        if(getCurrentWindow().isMaximized()) {
             document.body.classList.add('maximized');
         } else {
             document.body.classList.remove('maximized');
