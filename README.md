@@ -9,7 +9,7 @@ Estava utilizando um site Pomodoro para rastrear meu tempo no metodo de foco. Ac
 
 ## ⬇️ Download
 
-[Clique aqui](https://github.com/marcoantonio0/My-Pomodoro/releases/download/my-pomodoro/my-pomodoro-win32-x64.zip)
+[Clique aqui](https://github.com/marcoantonio0/My-Pomodoro/releases/download/v1.0.3/MyPomodoro-1.0.3.Setup.exe)
 
 ## Screenshots
 
