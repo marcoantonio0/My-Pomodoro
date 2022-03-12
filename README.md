@@ -6,6 +6,7 @@ Estava utilizando um site Pomodoro para rastrear meu tempo no metodo de foco. Ac
 * SCSS
 * Node.JS
 * Electron
+* Sql.JS
 
 ## ⬇️ Download
 
