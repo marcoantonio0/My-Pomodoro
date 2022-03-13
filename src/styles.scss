@@ -68,6 +68,21 @@ html, body {height: 100%; margin: 0;}
     text-align: center;
     padding: 10px 0;
   }
+
+  .btn-settings {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    height: 32px;
+    width: 32px;
+    cursor: pointer;
+    border-radius: 50%;
+    background-color: transparent;
+    transition: all ease-in-out 200ms;
+    &:hover {
+      background-color: #9c59b62d;
+    }
+  }
   
   #titlebar {
     padding: 4px;
@@ -392,6 +407,7 @@ html, body {height: 100%; margin: 0;}
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
    }
   .column2 { 
     height: 100%;
@@ -527,4 +543,204 @@ html, body {
         font-weight: 700;
         color: #666;
     }
+}
+
+.modal {
+  position: fixed;
+  top: 32px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #0000001c;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 99;
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  .modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 1.75rem auto;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    min-height: calc(100% - 57px);
+    pointer-events: none;
+    max-width: 400px;
+    z-index: 100;
+  }
+  .modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 0.3rem;
+    outline: 0;
+    z-index: 101;
+  }
+  .modal-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    h2 {
+      font-size: 14px;
+    }
+    .close {
+      height: 25px;
+      width: 25px;
+      background-color: transparent;
+      cursor: pointer;
+    }
+  }
+  .modal-body {
+    padding: 0 15px;
+    font-size: 14px;
+  }
+}
+
+.config-title {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+}
+
+.list-config {
+  display: flex;
+  flex-direction: column;
+
+  .config {
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+    &:last-of-type {
+      border-bottom: none;
+    }
+  }
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  div {
+    width: 98px;
+  }
+}
+
+.form-wrapper {
+  width: 100%;
+  .title {
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .form-control {
+    background-color: #eee;
+    border-radius: 5px;
+    appearance: none;
+    line-height: 1.5;
+    padding: 8px;
+    width: 100%;
+    font-size: 16px;
+    color: #666;
+  }
+}
+
+.modal-footer {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  button {
+    appearance: none;
+    border-radius: 5px;
+    line-height: 2.8;
+    padding: 0 15px;
+    font-weight: 600;
+    background-color: #9b59b6;
+    box-shadow: inset 0px -5px 0px 0px #8e44ad;
+    color: #fff;
+    cursor: pointer;
+    transition: all ease-in-out 80ms;
+    &:active {
+      box-shadow: inset 0px 0px 0px 0px #8e44ad;
+    }
+  }
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }

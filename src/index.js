@@ -79,7 +79,9 @@ let win;
   win.once('ready-to-show', () => {
     
     if(!isDev){
-      autoUpdater.checkForUpdates();
+      setTimeout(() => {
+        autoUpdater.checkForUpdates();
+      }, 1500);
   
       setInterval(() => {
         autoUpdater.checkForUpdates();

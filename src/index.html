@@ -47,6 +47,9 @@
               <div class="div1">
                   <div class="wrapper">
                     <div class="column1">
+                      <button class="btn-settings" onclick="openSettings()">
+                        <svg width="24px" height="24px" fill="#9b59b6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.32,9.55l-1.89-.63.89-1.78A1,1,0,0,0,20.13,6L18,3.87a1,1,0,0,0-1.15-.19l-1.78.89-.63-1.89A1,1,0,0,0,13.5,2h-3a1,1,0,0,0-.95.68L8.92,4.57,7.14,3.68A1,1,0,0,0,6,3.87L3.87,6a1,1,0,0,0-.19,1.15l.89,1.78-1.89.63A1,1,0,0,0,2,10.5v3a1,1,0,0,0,.68.95l1.89.63-.89,1.78A1,1,0,0,0,3.87,18L6,20.13a1,1,0,0,0,1.15.19l1.78-.89.63,1.89a1,1,0,0,0,.95.68h3a1,1,0,0,0,.95-.68l.63-1.89,1.78.89A1,1,0,0,0,18,20.13L20.13,18a1,1,0,0,0,.19-1.15l-.89-1.78,1.89-.63A1,1,0,0,0,22,13.5v-3A1,1,0,0,0,21.32,9.55ZM20,12.78l-1.2.4A2,2,0,0,0,17.64,16l.57,1.14-1.1,1.1L16,17.64a2,2,0,0,0-2.79,1.16l-.4,1.2H11.22l-.4-1.2A2,2,0,0,0,8,17.64l-1.14.57-1.1-1.1L6.36,16A2,2,0,0,0,5.2,13.18L4,12.78V11.22l1.2-.4A2,2,0,0,0,6.36,8L5.79,6.89l1.1-1.1L8,6.36A2,2,0,0,0,10.82,5.2l.4-1.2h1.56l.4,1.2A2,2,0,0,0,16,6.36l1.14-.57,1.1,1.1L17.64,8a2,2,0,0,0,1.16,2.79l1.2.4ZM12,8a4,4,0,1,0,4,4A4,4,0,0,0,12,8Zm0,6a2,2,0,1,1,2-2A2,2,0,0,1,12,14Z"/></svg>
+                      </button>
                       <div class="clocker">
                         <div style="padding-top: 10px;" id="types">
                             <span id="PRODUCTIVE_TIME" style="display: none;">Focar</span>
@@ -70,7 +73,7 @@
                               ></path>
                             </g>
                           </svg>
-                          <h2 id="clock">0:00</h2>
+                          <h2 id="clock"></h2>
                         </div>
                         <div class="actions">
                           <button class="btn btn-1 purple" onclick="startOrResume()" id="startOrResume">Iniciar</button>
@@ -96,6 +99,60 @@
                   <div class="list-tasks" id="tasks"></div>
               </div>
           </div>
+      </div>
+      <div class="modal" id="settings" >
+        <div class="modal-dialog" >
+          <div class="modal-content">
+            <div class="modal-head">
+              <h2>Configurações</h2>
+              <button class="close" onclick="closeSettings()">x</button>
+            </div>
+            <div class="modal-body">
+              <div class="list-config">
+                <div class="config">
+                  <span class="config-title" style="margin-bottom: 10px;">
+                    Tempo (minutos)
+                  </span>
+                  <div class="row">
+                    <div class="form-wrapper">
+                      <span class="title">Pomodoro</span>
+                      <input type="number" class="form-control" min="1"  max="999" id="productiveTime">
+                    </div>
+                    <div class="form-wrapper">
+                      <span class="title">Pausa</span>
+                      <input type="number" class="form-control" min="1" max="999"id="shortPauseTime">
+                    </div>
+                    <div class="form-wrapper">
+                      <span class="title">Pausa longa</span>
+                      <input type="number" class="form-control" min="1" max="999" id="longPauseTime">
+                    </div>
+                  </div>
+                </div>
+                <div class="config row">
+                  <span class="config-title">
+                    Pausas automáticas?
+                  </span>
+                  <label class="switch">
+                    <input type="checkbox" id="autoBreak">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+                <div class="config row">
+                  <span class="config-title">
+                    Pomodoro automático?
+                  </span>
+                  <label class="switch">
+                    <input type="checkbox" id="autoPomo">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <!-- <div class="modal-footer" >
+              <button>Concluir</button>
+            </div> -->
+          </div>
+        </div>
       </div>
     </main>
 </body>

@@ -5,13 +5,13 @@ const Db = require('./storeDb');
 
 const db = new Db(app);
 
-
-
 currentType = 'PRODUCTIVE_TIME',
 lastType = null;
 shortPauseTime = 5,
 longPauseTime = 15,
-productiveTime = 0.10,
+productiveTime = 25,
+autoBreak = false,
+autoPomo = false,
 clock = document.getElementById('clock'),
 startOrResumeButton = document.getElementById('startOrResume'),
 pauseButton = document.getElementById('pause'),
@@ -34,16 +34,103 @@ historyDiv = document.getElementById('history'),
 playing = false,
 timing = null;
 
-db.initiateDb(() => {
+db.initiateDb(async () => {
+    await setConfigs();
     renderTasks();
     renderData();
-    updateType();
-    renderTypes();
 });
 
 // checkData();
 
 
+ async function setConfigs() {
+    let result = await db.database.exec(`SELECT rowid AS id, * FROM configs WHERE rowid = 1`);
+    result =  parseArrayObject(result);
+    shortPauseTime = result[0].break_time;
+    longPauseTime = result[0].longbreak_time;
+    productiveTime = result[0].focus_time;
+
+    document.getElementById('productiveTime').value = productiveTime;
+    document.getElementById('shortPauseTime').value = shortPauseTime;
+    document.getElementById('longPauseTime').value = longPauseTime;
+
+    valuesChanges();
+
+    autoBreak = result[0].auto_break == 1 ? true : false;
+    autoPomo = result[0].auto_pomo == 1 ? true : false;
+
+    if(autoBreak)  document.getElementById('autoBreak').setAttribute('checked','');
+    if(autoPomo) document.getElementById('autoPomo').setAttribute('checked','');
+
+    updateType();
+    renderTypes();
+ }
+
+ function valuesChanges(){
+    document.getElementById('autoBreak').addEventListener('change', e => {
+        autoBreak = e.target.checked;
+        updateSettings();
+    })
+    document.getElementById('autoPomo').addEventListener('change', e => {
+        autoPomo = e.target.checked;
+        updateSettings();
+    })
+
+    document.getElementById('productiveTime').addEventListener('change', e => {
+        e.preventDefault();
+        renderTypes();
+        productiveTime = e.target.value;
+        updateSettings();
+    })
+
+    document.getElementById('shortPauseTime').addEventListener('change', e => {
+        e.preventDefault();
+        renderTypes();
+        shortPauseTime = e.target.value;
+        updateSettings();
+    })
+
+    document.getElementById('longPauseTime').addEventListener('change', e => {
+        e.preventDefault();
+        renderTypes();
+        longPauseTime = e.target.value;
+        updateSettings();
+    })
+
+    document.getElementById('productiveTime').addEventListener('keyup', e => {
+        e.preventDefault();
+        renderTypes();
+        productiveTime = e.target.value;
+        updateSettings();
+    })
+
+    document.getElementById('shortPauseTime').addEventListener('keyup', e => {
+        e.preventDefault();
+        renderTypes();
+        shortPauseTime = e.target.value;
+        updateSettings();
+    })
+
+    document.getElementById('longPauseTime').addEventListener('keyup', e => {
+        e.preventDefault();
+        renderTypes();
+        longPauseTime = e.target.value;
+        updateSettings();
+    })
+ }
+
+ function updateSettings(){
+     db.database.run(`UPDATE configs SET focus_time = ${productiveTime}, break_time = ${shortPauseTime}, longbreak_time = ${longPauseTime}, auto_break = ${autoBreak}, auto_pomo = ${autoPomo} WHERE rowid = 1;`);
+     db.exportDb();
+ }
+
+ function openSettings(){
+    document.getElementById('settings').classList.add('show');
+ }
+
+ function closeSettings(){
+    document.getElementById('settings').classList.remove('show');
+ }
 
  function addTask(data = {
      text: '',
@@ -162,7 +249,6 @@ db.initiateDb(() => {
 
 function renderData() {
     historyData =  getHistory();
-    console.log(historyData);
     let html = ``;
     if(historyData.length > 0){
         for (const data of historyData) {
@@ -221,29 +307,31 @@ function renderTypes() {
         let children = types.children.item(i);
         children.style.display = "none";
     }
-    switch(currentType) {
-        case 'PRODUCTIVE_TIME':
-            document.getElementById('PRODUCTIVE_TIME').style.display = 'block';
-            document.getElementById('clock').innerHTML = '25:00';
-            break;
-        case 'SHORT_PAUSE_TIME':
-            document.getElementById('SHORT_PAUSE_TIME').style.display = 'block';
-            document.getElementById('clock').innerHTML = '5:00';
-            break;
-        case 'LONG_PAUSE_TIME':
-            document.getElementById('LONG_PAUSE_TIME').style.display = 'block';
-            document.getElementById('clock').innerHTML = '15:00';
-            break;
+    if(state == 'FINISHED' || state == ''){
+        switch(currentType) {
+            case 'PRODUCTIVE_TIME':
+                document.getElementById('PRODUCTIVE_TIME').style.display = 'block';
+                document.getElementById('clock').innerHTML = `${productiveTime}:00`;
+                break;
+            case 'SHORT_PAUSE_TIME':
+                document.getElementById('SHORT_PAUSE_TIME').style.display = 'block';
+                document.getElementById('clock').innerHTML = `${shortPauseTime}:00`;
+                break;
+            case 'LONG_PAUSE_TIME':
+                document.getElementById('LONG_PAUSE_TIME').style.display = 'block';
+                document.getElementById('clock').innerHTML = `${longPauseTime}:00`;
+                break;
+        }
     }
 }
 
-function startOrResume(){
+function startOrResume(auto = false){
     switch (state){
         case '':
-            start();
+            start(auto);
             break;
         case 'FINISHED':
-            start();
+            start(auto);
             break;
         case 'PAUSED':
             resume();
@@ -251,23 +339,39 @@ function startOrResume(){
     }
 }
 
-function start() {
+function start(auto = false) {
     countDownTime = new Date();
 
     switch (currentType){
         case 'PRODUCTIVE_TIME':
-            currentTimeLimit = productiveTime * 60;
-            startClock();
-            timePassed = 0;
-            lastType = currentType;
-            state = 'TIMING';
+            let begin = () => {
+                currentTimeLimit = productiveTime * 60;
+                startClock();
+                timePassed = 0;
+                lastType = currentType;
+                state = 'TIMING';
+            }
+            if(auto && autoPromo){
+                begin();
+                showNotification(`Seu tempo de foco começou, você tem ${productiveTime}min.`)
+            } else if(!auto){
+                begin()
+            }
             break;
         case 'SHORT_PAUSE_TIME':
-            currentTimeLimit = shortPauseTime * 60;
-            startClock();
-            timePassed = 0;
-            lastType = currentType;
-            state = 'TIMING';
+            let beginPause = () => {
+                currentTimeLimit = shortPauseTime * 60;
+                startClock();
+                timePassed = 0;
+                lastType = currentType;
+                state = 'TIMING';
+            }
+            if(auto && autoBreak){
+                beginPause();
+                showNotification(`Seu tempo de pausa começou, você tem ${shortPauseTime}min.`)
+            } else if(!auto){
+                beginPause();
+            }
             break;
         case 'LONG_PAUSE_TIME':
             currentTimeLimit = longPauseTime * 60;
@@ -275,6 +379,9 @@ function start() {
             timePassed = 0;
             lastType = currentType;
             state = 'TIMING';
+            if(auto){
+                showNotification(`Sua pausa longa começou, você tem ${longPauseTime}min.`)
+            }
             break;
     }
     ipcRenderer.invoke('stateChange', state);
@@ -317,16 +424,21 @@ function eventFinish() {
         time_end: new Date()
     });
     renderData();
-    updateType(true);
     startOrResumeButton.style.display = 'block';
     pauseButton.style.display = 'none';
     stopButton.style.display = 'none';
     document.title = currentTitle;
     state = 'FINISHED';
     ipcRenderer.invoke('stateChange', state);
+    if(autoBreak || autoPomo){
+        updateType(true, true);
+        startOrResume(true);
+    } else {
+        updateType(true);
+    }
 }
 
-function updateType(notification = false) {
+function updateType(notification = false, auto = false) {
     // historyData = this.getHistory();
     lastType = historyData[historyData.length-1]?.type_current;
     if(lastType){
@@ -334,16 +446,16 @@ function updateType(notification = false) {
     } else {
         currentType = 'PRODUCTIVE_TIME';
     }
-    if(notification){
+    if(notification && !auto){
         switch(currentType){
             case 'PRODUCTIVE_TIME':
-                showNotification('Tempo de pausa acabou, hora de focar por 25min.');
+                showNotification(`Tempo de pausa acabou, hora de focar por ${productiveTime}min.`);
                 break;
             case 'LONG_PAUSE_TIME':
-                showNotification('Tempo de focar acabou, hora de uma pausa longa de 15min.');
+                showNotification(`Tempo de focar acabou, hora de uma pausa longa de ${longPauseTime}min.`);
                 break;
             case 'SHORT_PAUSE_TIME':
-                showNotification('Tempo de focar acabou, hora de pausar por 5min.');
+                showNotification(`Tempo de focar acabou, hora de pausar por ${shortPauseTime}min.`);
                 break;
         }
     }
@@ -377,13 +489,13 @@ function getNextType() {
 
 function stopAll() {
     clearInterval(timing);
-    currentTime = '0:00';
     clock.innerHTML = currentTime;
     startOrResumeButton.innerText = 'Iniciar';
     startOrResumeButton.style.display = 'block';
     pauseButton.style.display = 'none';
     stopButton.style.display = 'none';
     state = 'FINISHED';
+    renderTypes();
     currentTimeLimit = 0;
     timePassed = 0;
     timeLeft = 0;
