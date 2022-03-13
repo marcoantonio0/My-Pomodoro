@@ -1,17 +1,11 @@
 const { ipcRenderer } = require('electron');
 const path = require('path');
-const { getCurrentWindow, app } = require('@electron/remote');
-const Db = require('./storeDb');
-
-const db = new Db(app);
 
 currentType = 'PRODUCTIVE_TIME',
 lastType = null;
 shortPauseTime = 5,
 longPauseTime = 15,
 productiveTime = 25,
-autoBreak = false,
-autoPomo = false,
 clock = document.getElementById('clock'),
 startOrResumeButton = document.getElementById('startOrResume'),
 pauseButton = document.getElementById('pause'),
@@ -26,7 +20,7 @@ version= document.getElementById('version'),
 historyName = 'HS_CLOCK',
 taskName = 'TASK_DATA',
 historyData = localStorage.getItem(historyName) != null ? JSON.parse(localStorage.getItem(historyName)) : [],
-tasksData =  [],
+tasksData = localStorage.getItem(taskName) != null ? JSON.parse(localStorage.getItem(taskName)) : [],
 currentTitle = document.title,
 countDownTime = null,
 notification = false,
@@ -34,103 +28,11 @@ historyDiv = document.getElementById('history'),
 playing = false,
 timing = null;
 
-db.initiateDb(async () => {
-    await setConfigs();
-    renderTasks();
-    renderData();
-});
-
-// checkData();
-
-
- async function setConfigs() {
-    let result = await db.database.exec(`SELECT rowid AS id, * FROM configs WHERE rowid = 1`);
-    result =  parseArrayObject(result);
-    shortPauseTime = result[0].break_time;
-    longPauseTime = result[0].longbreak_time;
-    productiveTime = result[0].focus_time;
-
-    document.getElementById('productiveTime').value = productiveTime;
-    document.getElementById('shortPauseTime').value = shortPauseTime;
-    document.getElementById('longPauseTime').value = longPauseTime;
-
-    valuesChanges();
-
-    autoBreak = result[0].auto_break == 1 ? true : false;
-    autoPomo = result[0].auto_pomo == 1 ? true : false;
-
-    if(autoBreak)  document.getElementById('autoBreak').setAttribute('checked','');
-    if(autoPomo) document.getElementById('autoPomo').setAttribute('checked','');
-
-    updateType();
-    renderTypes();
- }
-
- function valuesChanges(){
-    document.getElementById('autoBreak').addEventListener('change', e => {
-        autoBreak = e.target.checked;
-        updateSettings();
-    })
-    document.getElementById('autoPomo').addEventListener('change', e => {
-        autoPomo = e.target.checked;
-        updateSettings();
-    })
-
-    document.getElementById('productiveTime').addEventListener('change', e => {
-        e.preventDefault();
-        renderTypes();
-        productiveTime = e.target.value;
-        updateSettings();
-    })
-
-    document.getElementById('shortPauseTime').addEventListener('change', e => {
-        e.preventDefault();
-        renderTypes();
-        shortPauseTime = e.target.value;
-        updateSettings();
-    })
-
-    document.getElementById('longPauseTime').addEventListener('change', e => {
-        e.preventDefault();
-        renderTypes();
-        longPauseTime = e.target.value;
-        updateSettings();
-    })
-
-    document.getElementById('productiveTime').addEventListener('keyup', e => {
-        e.preventDefault();
-        renderTypes();
-        productiveTime = e.target.value;
-        updateSettings();
-    })
-
-    document.getElementById('shortPauseTime').addEventListener('keyup', e => {
-        e.preventDefault();
-        renderTypes();
-        shortPauseTime = e.target.value;
-        updateSettings();
-    })
-
-    document.getElementById('longPauseTime').addEventListener('keyup', e => {
-        e.preventDefault();
-        renderTypes();
-        longPauseTime = e.target.value;
-        updateSettings();
-    })
- }
-
- function updateSettings(){
-     db.database.run(`UPDATE configs SET focus_time = ${productiveTime}, break_time = ${shortPauseTime}, longbreak_time = ${longPauseTime}, auto_break = ${autoBreak}, auto_pomo = ${autoPomo} WHERE rowid = 1;`);
-     db.exportDb();
- }
-
- function openSettings(){
-    document.getElementById('settings').classList.add('show');
- }
-
- function closeSettings(){
-    document.getElementById('settings').classList.remove('show');
- }
+checkData();
+updateType();
+renderTypes();
+renderData();
+renderTasks();
 
  function addTask(data = {
      text: '',
@@ -144,151 +46,88 @@ db.initiateDb(async () => {
 
  function checkTask(index) {
     tasksData = getTasks();
-    tasksData[index].checked = tasksData[index].checked == 1 ? 0 : 1;
-    db.database.run(`UPDATE tasks SET checked = ${tasksData[index].checked} WHERE rowid = ${tasksData[index].id}`);
-    db.exportDb();
+    tasksData[index].checked = !tasksData[index].checked;
+    localStorage.setItem(taskName,JSON.stringify(tasksData));
     renderTasks();
  }
 
  function sendTask(){
      let text = document.getElementById('text').value;
-    
      if(text){
         document.getElementById('text').value = '';
-        db.database.run(`INSERT INTO tasks (title,note,est_pomo,checked,total_pomo,created_at) VALUES 
-            ('${text}', '', 0, 0, 0, datetime('now'))`);
         addTask({
-            title: text,
-            note: '',
-            check: 0,
-            total_pomo: 0,
-            est_pomo: 0,
+            text,
+            check: false,
             created_at: new Date().toDateString()
         });
-        db.exportDb();
         renderTasks();
      }
  }
 
- function removeTask(id) {
-     let index = tasksData.findIndex(x => x.id == id);
+ function removeTask(index) {
+    tasksData = getTasks();
     tasksData.splice(index, 1);
-    db.database.run(`DELETE FROM tasks WHERE rowid = ${id}`);
-    db.exportDb();
+    localStorage.setItem(taskName,JSON.stringify(tasksData));
     renderTasks();
  }
 
  function getTasks() {
-    let result  = db.database.exec(`SELECT rowid AS id, title,
-    note,
-    est_pomo,
-    total_pomo, created_at, checked FROM tasks`);
-    return parseArrayObject(result);
- }
-
- function parseArrayObject(result) {
-     let array = [];
-     if(result.length > 0){
-        let columns = result[0].columns;
-        let values = result[0].values;
-        if(columns.length && values.length > 0){
-           for (const value of values) {
-               let object = {};
-               for (const [i, v] of value.entries()) {
-                   object[columns[i]] = v;
-               }
-               array.push(object);
-           }
-       }
-     }
-    return array;
+    return localStorage.getItem(taskName) != null ? JSON.parse(localStorage.getItem(taskName)) : [];
  }
 
  function renderTasks(){
     tasksData = getTasks();
     let html = ``;
-    if(tasksData.length > 0){
-        for (const [i, v] of tasksData.entries()) {
-            let time = new Date(v.created_at)
-            html += `\n
-            <div class="task ${v.checked == 1 ? 'checked' : ''}" onclick="checkTask(${i})">
-                <span class="time">${time.getDate()}/${time.getMonth()+1}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}</span>
-                <span class="task-text">${v.title}</span>
-                <buttton class="btn-remove-task" type="button" onclick="removeTask(${v.id})"></buttton>
-            </div>
-            `
-        }
-    } else {
-        html = `
-            <div class="empyt">
-                Não há nenhuma task no momento.</br>
-                Adicione uma task!
-            </div>
-        `;
+    for (const [i, v] of tasksData.entries()) {
+        let time = new Date(v.created_at)
+        html += `\n
+        <div class="task ${v.checked == true ? 'checked' : ''}" onclick="checkTask(${i})">
+            <span class="time">${time.getDate()}/${time.getMonth()+1}/${time.getFullYear()} ${time.getHours()}:${time.getMinutes()}</span>
+            <span class="task-text">${v.text}</span>
+            <buttton class="btn-remove-task" type="button" onclick="removeTask(${i})"></buttton>
+        </div>
+        `
     }
     document.getElementById('tasks').innerHTML = html;
  }
 
  function getHistory() {
-    let result = db.database.exec(`SELECT rowid, * FROM logs;`)
-    return parseArrayObject(result);
+   return localStorage.getItem(historyName) != null ? JSON.parse(localStorage.getItem(historyName)) : [];
  }
 
-//  function checkData() {
-//     historyData =  getHistory();
-//     if(historyData.length > 0){
-//         let time = new Date(historyData[historyData.length-1].time_start);
-//         let dateNow = new Date();
-//         if(time.getDate() != dateNow.getDate() && time.getMonth() != dateNow.getMonth() && time.getFullYear() != dateNow.getFullYear()){
-//             localStorage.removeItem(historyName);
-//             return;
-//         } else return;
-//     }
-//     return;
-//  }
+ function checkData() {
+    historyData =  getHistory();
+    if(historyData.length > 0){
+        let time = new Date(historyData[historyData.length-1].time_start);
+        let dateNow = new Date();
+        if(time.getDate() != dateNow.getDate() && time.getMonth() != dateNow.getMonth() && time.getFullYear() != dateNow.getFullYear()){
+            localStorage.removeItem(historyName);
+            return;
+        } else return;
+    }
+    return;
+ }
 
 function renderData() {
     historyData =  getHistory();
     let html = ``;
-    if(historyData.length > 0){
-        for (const data of historyData) {
-            let timeStart = new Date(data.time_start);
-            let timeEnd = new Date(data.time_end);
-            let type = '';
-            if(data.type_current == 'PRODUCTIVE_TIME') {
-                type = 'Tempo focado'
-            } else if(data.type_current == 'SHORT_PAUSE_TIME'){
-                type = 'Pausa curta'
-            } else {
-                type = 'Pausa longa'
-            }
-            html += `\n
-            <div class="history-item">
-                <span class="time">${timeStart.getDate()+'/'+(timeStart.getMonth()+1)+'/'+timeStart.getFullYear()} - ${timeStart.getHours()}:${timeStart.getMinutes()} à ${timeEnd.getHours()}:${timeEnd.getMinutes()}</span>
-                <span class="type">${type}</span>
-            </div>
-            `;
-        }
-    } else {
-        html = `
-            <div class="empyt">
-                Nenhum registro no histórico no momento.</br>
-                Comece a concluir os tempos para aparecer aqui!
-            </div>
+    for (const data of historyData) {
+        let timeStart = new Date(data.time_start);
+        let timeEnd = new Date(data.time_end);
+        html += `\n
+        <div class="history-item">
+            <span class="time">${timeStart.getDate()+'/'+(timeStart.getMonth()+1)+'/'+timeStart.getFullYear()} - ${timeStart.getHours()}:${timeStart.getMinutes()} à ${timeEnd.getHours()}:${timeEnd.getMinutes()}</span>
+            <span class="type">${data.type}</span>
+        </div>
         `;
     }
-
     historyDiv.innerHTML = html;
 }
 
 function setHistoryData(data){
-    db.database.run(`INSERT INTO logs (pomo_day, time_start, time_end, type_current) VALUES (
-        datetime('now'),
-        datetime('${countDownTime.toISOString()}'),
-        datetime('now'),
-        "${data.type}"
-    );`);
-    db.exportDb();
+    historyData =  getHistory();
+    historyData.push(data);
+    localStorage.setItem(historyName, JSON.stringify(historyData))
 }
 
 function deleteHistoryData(index){
@@ -307,21 +146,16 @@ function renderTypes() {
         let children = types.children.item(i);
         children.style.display = "none";
     }
-    if(state == 'FINISHED' || state == ''){
-        switch(currentType) {
-            case 'PRODUCTIVE_TIME':
-                document.getElementById('PRODUCTIVE_TIME').style.display = 'block';
-                document.getElementById('clock').innerHTML = `${productiveTime}:00`;
-                break;
-            case 'SHORT_PAUSE_TIME':
-                document.getElementById('SHORT_PAUSE_TIME').style.display = 'block';
-                document.getElementById('clock').innerHTML = `${shortPauseTime}:00`;
-                break;
-            case 'LONG_PAUSE_TIME':
-                document.getElementById('LONG_PAUSE_TIME').style.display = 'block';
-                document.getElementById('clock').innerHTML = `${longPauseTime}:00`;
-                break;
-        }
+    switch(currentType) {
+        case 'PRODUCTIVE_TIME':
+            document.getElementById('PRODUCTIVE_TIME').style.display = 'block';
+            break;
+        case 'SHORT_PAUSE_TIME':
+            document.getElementById('SHORT_PAUSE_TIME').style.display = 'block';
+            break;
+        case 'LONG_PAUSE_TIME':
+            document.getElementById('LONG_PAUSE_TIME').style.display = 'block';
+            break;
     }
 }
 
@@ -438,9 +272,9 @@ function eventFinish() {
     }
 }
 
-function updateType(notification = false, auto = false) {
-    // historyData = this.getHistory();
-    lastType = historyData[historyData.length-1]?.type_current;
+function updateType(notification = false) {
+    
+    lastType = historyData[historyData.length-1]?.type;
     if(lastType){
         currentType = getNextType();
     } else {
@@ -471,7 +305,7 @@ function getNextType() {
             for (let i = total; i < total+7; i++) {
                 data.push(historyData[i]);
             }
-            if(data.filter(x => x.type_current == 'SHORT_PAUSE_TIME').length >= 3){
+            if(data.filter(x => x.type == 'SHORT_PAUSE_TIME').length >= 3){
                 return 'LONG_PAUSE_TIME';  
             } else {
                 return 'SHORT_PAUSE_TIME';
@@ -566,8 +400,6 @@ document.onreadystatechange = (event) => {
             pause();
         })
 
-        
-    
 
         ipcRenderer.on('update-available', () => {
             document.getElementById('update').style.display = 'block';
@@ -576,7 +408,7 @@ document.onreadystatechange = (event) => {
         })
 
         ipcRenderer.on('update-not-available', () => {
-            document.getElementById('update').style.display = 'block';
+            document.getElementById('update').style.display = 'none';
             document.getElementById('searchUpdate').style.display = 'none';
             document.getElementById('newUpdate').style.display = 'none';
         })
@@ -607,7 +439,9 @@ function quitAndInstall() {
 } 
 
 window.onbeforeunload = (event) => {
-
+    /* If window is reloaded, remove win event listeners
+    (DOM element listeners get auto garbage collected but not
+    Electron win listeners as the win is not dereferenced unless closed) */
     ipcRenderer.removeAllListeners();
 }
 
@@ -615,19 +449,17 @@ function handleWindowControls() {
     // Make minimise/maximise/restore/close buttons work when they are clicked
     document.getElementById('min-button').addEventListener("click", event => {
         // ipcRenderer.minimize();
-        // ipcRenderer.invoke('minimize');
-        getCurrentWindow().minimize();
-        // BrowserWindow.getFocusedWindow().minimize();
+        ipcRenderer.invoke('minimize');
     });
-    
+
     document.getElementById('max-button').addEventListener("click", event => {
-        getCurrentWindow().maximize();
-        // ipcRenderer.invoke('maxOrUnmax');
+       
+        ipcRenderer.invoke('maxOrUnmax');
     });
 
     document.getElementById('restore-button').addEventListener("click", event => {
      
-        getCurrentWindow().unmaximize();
+        ipcRenderer.invoke('maxOrUnmax');
         
     });
 
@@ -637,14 +469,15 @@ function handleWindowControls() {
 
     document.getElementById('close-button').addEventListener("click", event => {
         // win.close();
-        getCurrentWindow().hide();
+        ipcRenderer.invoke('close');
     });
 
-    getCurrentWindow().on('resize', toggleMaxRestoreButtons)
-    
+    // Toggle maximise/restore buttons when maximisation/unmaximisation occurs
+    // toggleMaxRestoreButtons();
+    ipcRenderer.on('minOrmax', toggleMaxRestoreButtons);
 
     function toggleMaxRestoreButtons(e, data) {
-        if(getCurrentWindow().isMaximized()) {
+        if (data == 'maximize') {
             document.body.classList.add('maximized');
         } else {
             document.body.classList.remove('maximized');
